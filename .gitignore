@@ -1,0 +1,8 @@
+# Ignore a folders
+output/
+short_guided_meditation_audio_only/
+node_modules/
+
+# Ignore files with a specific extension
+*.json
+*.png
