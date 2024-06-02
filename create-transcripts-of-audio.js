@@ -3,9 +3,10 @@ const { describe } = require('node:test');
 const path = require('path');
 const MY_API_KEY = 'hWgWgh3fZQuoofiUP0oxe7aaoekEM1iL'
 const { spawn } = require('child_process');
+const OpenAI = require("openai").default;
 
 
-async function uploadAudio(fileNames, folderPath) {
+async function uploadAudio(fileNames, folderPath, ) {
   for (const fileName of fileNames) {
     try {
       console.log(fileName)
@@ -38,7 +39,7 @@ async function uploadAudio(fileNames, folderPath) {
 
       const transcriptionFileName = fileName.replace('.mp3', '.txt');
       console.log(transcriptionFileName)
-      const directoryPath = './output'
+      const directoryPath = folderPath;
       const fullPath = path.join(directoryPath,transcriptionFileName)
       console.log(fullPath);
       await fs.writeFile(fullPath, data);
@@ -132,7 +133,7 @@ async function getMP4ImageFilePath(imageFolderPath) {
 
   // Filter the files to find the first image file (assuming there's only one)
   const stillImageForMP4 = images.find(file => {
-    const extname = path.extname(images).toLowerCase();
+    const extname = path.extname(file).toLowerCase();
     return ['.jpg', '.jpeg', '.png'].includes(extname);
   });
 
@@ -205,26 +206,34 @@ async function processFiles(folderPath) {
       const sourcePath = path.join(folderPath, fileName);
       const destinationPath = path.join(newFolderPath, fileName);
       await fs.rename(sourcePath, destinationPath);
+      console.log(destinationPath, '\n\n',newFolderPath);
       
-      // run transcription on this file and store the output
-      const transcriptionData = await uploadAudio(recordings, folderPath);
+      // // run transcription on this file and store the output
+      // const transcriptionData = await uploadAudio(recordings, newFolderPath);
 
-      // run the transcription output through an LLM to get a formatted transcrition
-      const formattedTranscriptionToSave = await formatTranscription(transcriptionData);
-      // write the transcript to a .txt file
+      // // run the transcription output through an LLM to get a formatted transcrition
+      // const formattedTranscriptionToSave = await formatTranscription(transcriptionData);
+      // // write the transcript to a .txt file
 
-      // run the transcription output through an LLM to get summary objects
-      const summaryInformationForUpload = await createSummaryData(transcriptionData);
-      // write the summary object to a .txt file
+      // // run the transcription output through an LLM to get summary objects
+      // const summaryInformationForUpload = await createSummaryData(transcriptionData);
+      // // write the summary object to a .txt file
 
-      // run the create video terminal command to convert to mp4
-      // pass the image file path in explicitly,
-      // audio input and output paths are taken from above
+      // // run the create video terminal command to convert to mp4
+      // // pass the image file path in explicitly,
+      // // audio input and output paths are taken from above
       try {
+        const stillImageFilePath = await getMP4ImageFilePath('./image/');
+        const mp4filePath = path.join(newFolderPath, 'convertedVideo.mp4');
+        
+        console.log('image path :>> ', stillImageFilePath);
+        console.log('input path :>> ', destinationPath);
+        console.log('output path :>> ', newFolderPath, mp4filePath);
         await createVideo(
-          getMP4ImageFilePath('./image/'),
+          stillImageFilePath,
+          // check whether the audio file is actually here now
           destinationPath,
-          newFolderPath
+          mp4filePath
         );
         console.log('Video created successfully');
       } catch (error) {
@@ -244,13 +253,11 @@ async function main() {
   try {
     // Read all files in the current directory
     const folderPath = './short_guided_meditation_audio_only/test';
-    console.log(recordings, recordings.length);
 
     // run the function that will process each file
     await processFiles(folderPath);
-
   }
-  
+
   catch (error) {
     console.error('Error:', error);
   }
