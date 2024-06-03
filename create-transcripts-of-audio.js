@@ -61,19 +61,14 @@ async function formatTranscription(transcription) {
 
     const completion = await openai.chat.completions.create({
       messages: [
-        { role: "system", content: "You are an exceptionally helpful assistant that excels at summarising conversations succintly and formatting documents well." },
+        { role: "system", content: "You are an exceptionally helpful assistant that excels at summarising conversations succintly and formatting documents well" },
         { role: "user", content: 
         `
         ${transcription}
         This is a transcription from a voice conversation. It is a text output with no formatting. 
-        I would like you to format it so that it is more readable.
-        Next I would like you to display to me an object literal with the following key-value pairs.
-        (For each value I have specified the action you should take):
-        title: create a title for this conversation (this should be a string), 
-        description: summarise the conversation into a single paragraph that captures just the key points and takeaways. ((this should be a string), 
-        keywords: assume this will be uploaded to YouTube, create a few of tags to capture keywords from the conversation (comma separated string),
+        I would like you to format it so that it is more readable.       
         
-        Your output should be the formatted conversation and the object literal
+        Your output should be only the formatted conversation and nothing else. No additional words.
         
         ` },
       ],
@@ -105,12 +100,12 @@ async function createSummaryData(transcription) {
         `
         ${transcription}
         This is a transcription from a voice conversation. 
-        I would like you to return an object literal with the following key-value pairs.
-        (For each value I have specified the action you should take):
-        title: create a title for this conversation (this should be a string), 
-        description: summarise the conversation into a single paragraph that captures just the key points and takeaways. ((this should be a string), 
-        keywords: assume this will be uploaded to YouTube, create a few of tags to capture keywords from the conversation. make sure you always include
-        the default keywords "meditation" and "guided meditation" and come up with 4 others that are relevant (comma separated string),  
+        I would like you to return a JSON object with the following key-value pairs:
+        - "title": a title for this conversation (string),
+        - "description": a single paragraph that summarizes the key points and takeaways of the conversation (string),
+        - "keywords": 5-6 relevant keywords for the conversation, including "meditation" and "guided meditation" (comma-separated string),
+    
+        Please generate the JSON object without any escape characters or newline symbols. The JSON should be formatted with regular spaces and line breaks for readability. The output should be only the JSON object and other words.
         ` 
         },
       ],
@@ -232,7 +227,7 @@ async function processFiles(folderPath) {
       const metadataFileName = `videoMetadata_${timestamp}.json`;
       const metatdataFilePath = path.join(newFolderPath, metadataFileName);
       try {
-        await fs.writeFile(metatdataFilePath, JSON.stringify(summaryInformationForUpload, null, 2));
+        await fs.writeFile(metatdataFilePath, summaryInformationForUpload,);
         console.log(`Summary information saved to ${metatdataFilePath}`);
       } catch (error) {
         console.error('Error writing transcript file:', error);
@@ -241,23 +236,23 @@ async function processFiles(folderPath) {
       // run the create video terminal command to convert to mp4
       // pass the image file path in explicitly,
       // audio input and output paths are taken from above
-      try {
-        const stillImageFilePath = await getMP4ImageFilePath('./image/');
-        const mp4filePath = path.join(newFolderPath, 'convertedVideo.mp4');
+      // try {
+      //   const stillImageFilePath = await getMP4ImageFilePath('./image/');
+      //   const mp4filePath = path.join(newFolderPath, 'convertedVideo.mp4');
 
-        console.log('image path :>> ', stillImageFilePath);
-        console.log('input path :>> ', destinationPath);
-        console.log('output path :>> ', newFolderPath, mp4filePath);
-        await createVideo(
-          stillImageFilePath,
-          // check whether the audio file is actually here now
-          destinationPath,
-          mp4filePath
-        );
-        console.log('Video created successfully');
-      } catch (error) {
-        console.error('Error creating video:', error);
-      }
+      //   console.log('image path :>> ', stillImageFilePath);
+      //   console.log('input path :>> ', destinationPath);
+      //   console.log('output path :>> ', newFolderPath, mp4filePath);
+      //   await createVideo(
+      //     stillImageFilePath,
+      //     // check whether the audio file is actually here now
+      //     destinationPath,
+      //     mp4filePath
+      //   );
+      //   console.log('Video created successfully');
+      // } catch (error) {
+      //   console.error('Error creating video:', error);
+      // }
       
   }
 } catch (error) {
