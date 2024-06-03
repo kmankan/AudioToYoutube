@@ -6,7 +6,7 @@ const { spawn } = require('child_process');
 const OpenAI = require("openai").default;
 
 
-async function uploadAudio(fileNames, folderPath, ) {
+async function uploadAudioForTranscription(fileNames, folderPath, ) {
   for (const fileName of fileNames) {
     try {
       console.log(fileName)
@@ -208,24 +208,43 @@ async function processFiles(folderPath) {
       await fs.rename(sourcePath, destinationPath);
       console.log(destinationPath, '\n\n',newFolderPath);
       
-      // // run transcription on this file and store the output
-      // const transcriptionData = await uploadAudio(recordings, newFolderPath);
+      // timestamp
+      const timestamp = Date.now()
 
-      // // run the transcription output through an LLM to get a formatted transcrition
-      // const formattedTranscriptionToSave = await formatTranscription(transcriptionData);
-      // // write the transcript to a .txt file
+      // run transcription on this file and store the output
+      const transcriptionData = await uploadAudioForTranscription(recordings, newFolderPath);
 
-      // // run the transcription output through an LLM to get summary objects
-      // const summaryInformationForUpload = await createSummaryData(transcriptionData);
-      // // write the summary object to a .txt file
+      // run the transcription output through an LLM to get a formatted transcrition
+      const formattedTranscriptionToSave = await formatTranscription(transcriptionData);
+      // write the transcript to a .txt file
+      const audioTranscriptfileName = `audioTranscript_${timestamp}.txt`;
+      const audioTranscriptFilePath = path.join(newFolderPath, audioTranscriptfileName);
+      try {
+        await fs.writeFile(audioTranscriptFilePath, formattedTranscriptionToSave);
+        console.log(`Transcript saved to ${audioTranscriptfileName}`);
+      } catch (error) {
+        console.error('Error writing transcript file:', error);
+      }
 
-      // // run the create video terminal command to convert to mp4
-      // // pass the image file path in explicitly,
-      // // audio input and output paths are taken from above
+      // run the transcription output through an LLM to get summary objects
+      const summaryInformationForUpload = await createSummaryData(transcriptionData);
+      // write the summary object to a .json file
+      const metadataFileName = `videoMetadata_${timestamp}.json`;
+      const metatdataFilePath = path.join(newFolderPath, metadataFileName);
+      try {
+        await fs.writeFile(metatdataFilePath, JSON.stringify(summaryInformationForUpload, null, 2));
+        console.log(`Summary information saved to ${metatdataFilePath}`);
+      } catch (error) {
+        console.error('Error writing transcript file:', error);
+      }
+      
+      // run the create video terminal command to convert to mp4
+      // pass the image file path in explicitly,
+      // audio input and output paths are taken from above
       try {
         const stillImageFilePath = await getMP4ImageFilePath('./image/');
         const mp4filePath = path.join(newFolderPath, 'convertedVideo.mp4');
-        
+
         console.log('image path :>> ', stillImageFilePath);
         console.log('input path :>> ', destinationPath);
         console.log('output path :>> ', newFolderPath, mp4filePath);
